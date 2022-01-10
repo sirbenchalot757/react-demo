@@ -3,7 +3,14 @@
   "version": "0.13.8",
   "dependencies": {
     "@bn-onboard/core": "^2.0.0-alpha.3",
+    "@bn-onboard/fortmatic": "^2.0.0-alpha.1",
     "@bn-onboard/injected-wallets": "^2.0.0-alpha.1",
+    "@bn-onboard/ledger": "^2.0.0-alpha.1",
+    "@bn-onboard/portis": "^2.0.0-alpha.1",
+    "@bn-onboard/torus": "^2.0.0-alpha.1",
+    "@bn-onboard/walletconnect": "^2.0.0-alpha.1",
+    "@bn-onboard/walletlink": "^2.0.0-alpha.1",
+    "@craco/craco": "^6.4.3",
     "bnc-notify": "^1.9.2",
     "bnc-notify-staging": "https://github.com/blocknative/notify#develop",
     "ethers": "^5.5.2",
@@ -13,13 +20,13 @@
     "vconsole": "^3.3.4"
   },
   "scripts": {
-    "start": "HTTPS=true react-scripts start",
-    "start-staging": "REACT_APP_API_URL=wss://staging.api.blocknative.com/v0 REACT_APP_STAGING=true HTTPS=true react-scripts start",
-    "start-local": "REACT_APP_API_URL=ws://localhost:54100/v0 REACT_APP_STAGING=true HTTPS=true react-scripts start",
-    "build": "react-scripts build",
-    "build-staging": "REACT_APP_API_URL=wss://staging.api.blocknative.com/v0 REACT_APP_STAGING=true react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "HTTPS=true craco start",
+    "start-staging": "REACT_APP_API_URL=wss://staging.api.blocknative.com/v0 REACT_APP_STAGING=true HTTPS=true craco start",
+    "start-local": "REACT_APP_API_URL=ws://localhost:54100/v0 REACT_APP_STAGING=true HTTPS=true craco start",
+    "build": "craco build",
+    "build-staging": "REACT_APP_API_URL=wss://staging.api.blocknative.com/v0 REACT_APP_STAGING=true craco build",
+    "test": "craco test",
+    "eject": "craco eject"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -37,6 +44,16 @@
     ]
   },
   "devDependencies": {
-    "prettier": "^2.0.5"
+    "assert": "^2.0.0",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
+    "https-browserify": "^1.0.0",
+    "os-browserify": "^0.3.0",
+    "prettier": "^2.0.5",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.0",
+    "util": "^0.12.4"
   }
 }

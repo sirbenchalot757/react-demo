@@ -1,5 +1,3 @@
-import Onboard from '@bn-onboard/core'
-import injectedWalletsModule from '@bn-onboard/injected-wallets'
 import React, { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import VConsole from 'vconsole'
@@ -46,22 +44,7 @@ const App = () => {
   const [toAddress, setToAddress] = useState('')
 
   useEffect(() => {
-    const injected = injectedWalletsModule()
-    setOnboard(
-      Onboard({
-        wallets: [injected],
-        chains: [
-          {
-            id: '0x4',
-            token: 'rETH',
-            label: 'Ethereum Rinkeby Testnet',
-            rpcUrl:
-              'https://rinkeby.infura.io/v3/ababf9851fd845d0a167825f97eeb12b'
-          }
-        ]
-      })
-    )
-
+    setOnboard(initOnboard)
     setNotify(initNotify())
   }, [])
 
@@ -366,7 +349,7 @@ const App = () => {
               {wallets[0]?.provider && (
                 <button
                   className="bn-demo-button"
-                  onClick={onboard.disconnectWallet}
+                  onClick={() => onboard.disconnectWallet(wallets[0].label)}
                 >
                   Disconnect Wallet
                 </button>
