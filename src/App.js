@@ -1,3 +1,5 @@
+import Onboard from '@bn-onboard/core'
+import injectedWalletsModule from '@bn-onboard/injected-wallets'
 import React, { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import VConsole from 'vconsole'
@@ -33,12 +35,7 @@ const internalTransferABI = [
 let internalTransferContract
 
 const App = () => {
-  const [address, setAddress] = useState(null)
-  const [ens, setEns] = useState(null)
-  const [network, setNetwork] = useState(null)
-  const [balance, setBalance] = useState(null)
-  const [wallet, setWallet] = useState({})
-
+  const [wallets, setWallets] = useState([])
   const [onboard, setOnboard] = useState(null)
   const [notify, setNotify] = useState(null)
 
@@ -49,54 +46,44 @@ const App = () => {
   const [toAddress, setToAddress] = useState('')
 
   useEffect(() => {
-    const onboard = initOnboard({
-      address: setAddress,
-      ens: setEns,
-      network: setNetwork,
-      balance: setBalance,
-      wallet: wallet => {
-        if (wallet.provider) {
-          setWallet(wallet)
-
-          provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
-
-          internalTransferContract = new ethers.Contract(
-            '0xb8c12850827ded46b9ded8c1b6373da0c4d60370',
-            internalTransferABI,
-            provider.getUncheckedSigner()
-          )
-
-          window.localStorage.setItem('selectedWallet', wallet.name)
-        } else {
-          provider = null
-          setWallet({})
-        }
-      }
-    })
-
-    setOnboard(onboard)
+    const injected = injectedWalletsModule()
+    setOnboard(
+      Onboard({
+        wallets: [injected],
+        chains: [
+          {
+            id: '0x4',
+            token: 'rETH',
+            label: 'Ethereum Rinkeby Testnet',
+            rpcUrl:
+              'https://rinkeby.infura.io/v3/ababf9851fd845d0a167825f97eeb12b'
+          }
+        ]
+      })
+    )
 
     setNotify(initNotify())
   }, [])
+
+  useEffect(() => {
+    if (onboard) {
+      const connectedWallets = onboard.state.select('wallets')
+      const subscription = connectedWallets.subscribe(setWallets)
+
+      return () => {
+        subscription.unsubscribe()
+      }
+    }
+  }, [onboard])
 
   useEffect(() => {
     const previouslySelectedWallet =
       window.localStorage.getItem('selectedWallet')
 
     if (previouslySelectedWallet && onboard) {
-      onboard.walletSelect(previouslySelectedWallet)
+      onboard.connectWallet({ autoSelect: previouslySelectedWallet })
     }
-  }, [onboard])
-
-  const readyToTransact = async () => {
-    if (!provider) {
-      const walletSelected = await onboard.walletSelect()
-      if (!walletSelected) return false
-    }
-
-    const ready = await onboard.walletCheck()
-    return ready
-  }
+  }, [])
 
   const sendHash = async () => {
     if (!toAddress) {
@@ -298,176 +285,177 @@ const App = () => {
   return (
     <main>
       <header className="user-info-container">
-      <a className='bn-logo-link'
+        <a
+          className="bn-logo-link"
           href="https://www.blocknative.com/"
           target="_blank"
           rel="noopener noreferrer"
-          title="Blocknative Site">
+          title="Blocknative Site"
+        >
           <img className="bn-logo-demo" src={BNLogo} alt="Block Native Logo" />
         </a>
-        <div className="user-info">
-          {ens?.name ? (
-            <span>
-              <img
-                className="user-avatar"
-                src={ens.avatar ? ens.avatar : avatarPlaceholder}
-                alt="avatar"
-              ></img>
-              <div
-                style={{
-                  marginLeft: '10px'
-                }}
-              >
-                {ens.name}
-              </div>
-            </span>
-          ) : (
-            address && <span className="user-address">{address}</span>
-          )}
-          {balance != null && (
-            <span>
-              {Number(balance) > 0 ? balance / 1000000000000000000 : balance}{' '}
-              ETH
-            </span>
-          )}
-          {network && (
-            <span>{networkEnum?.[Number(network)] || 'local'} Network</span>
-          )}
-        </div>
+        {wallets[0] && (
+          <div className="user-info">
+            {wallets[0].accounts[0].ens?.name ? (
+              <span>
+                <img
+                  className="user-avatar"
+                  src={
+                    wallets[0].accounts[0].ens.avatar
+                      ? wallets[0].accounts[0].ens.avatar
+                      : avatarPlaceholder
+                  }
+                  alt="avatar"
+                ></img>
+                <div
+                  style={{
+                    marginLeft: '10px'
+                  }}
+                >
+                  {wallets[0].accounts[0].ens.name}
+                </div>
+              </span>
+            ) : (
+              wallets[0].accounts[0].address && (
+                <span className="user-address">
+                  {wallets[0].accounts[0].address}
+                </span>
+              )
+            )}
+            {wallets[0].accounts[0]?.balance?.rETH != null && (
+              <span>
+                {Number(wallets[0].accounts[0]?.balance?.rETH) > 0
+                  ? wallets[0].accounts[0]?.balance?.rETH
+                  : wallets[0].accounts[0]?.balance?.rETH}{' '}
+                ETH
+              </span>
+            )}
+            {wallets[0].chain && (
+              <span>
+                {networkEnum?.[Number(wallets[0].chain)] || 'local'} Network
+              </span>
+            )}
+          </div>
+        )}
       </header>
       <section className="main">
         <div className="main-content">
           <div className="vertical-main-container">
             <div className="container onboard">
               <h2>Onboarding Users with Onboard</h2>
-              <div>
-                {!wallet.provider && (
-                  <button
-                    className="bn-demo-button"
-                    onClick={() => {
-                      onboard.walletSelect()
-                    }}
-                  >
-                    Select a Wallet
-                  </button>
-                )}
+              {!wallets[0]?.provider && (
+                <button
+                  className="bn-demo-button"
+                  onClick={() => {
+                    onboard.connectWallet()
+                  }}
+                >
+                  Connect a Wallet
+                </button>
+              )}
 
-                {wallet.provider && (
-                  <button
-                    className="bn-demo-button"
-                    onClick={onboard.walletCheck}
-                  >
-                    Wallet Checks
-                  </button>
-                )}
+              {wallets[0]?.provider && (
+                <button
+                  className="bn-demo-button"
+                  onClick={onboard.connectWallet}
+                >
+                  Connect another wallet
+                </button>
+              )}
 
-                {wallet.provider && (
-                  <button
-                    className="bn-demo-button"
-                    onClick={onboard.walletSelect}
-                  >
-                    Switch Wallets
-                  </button>
-                )}
-
-                {wallet.provider && (
-                  <button
-                    className="bn-demo-button"
-                    onClick={onboard.walletReset}
-                  >
-                    Reset Wallet State
-                  </button>
-                )}
-                {wallet.provider && wallet.dashboard && (
-                  <button className="bn-demo-button" onClick={wallet.dashboard}>
-                    Open Wallet Dashboard
-                  </button>
-                )}
-                {wallet.provider && wallet.type === 'hardware' && address && (
-                  <button
-                    className="bn-demo-button"
-                    onClick={onboard.accountSelect}
-                  >
-                    Switch Account
-                  </button>
-                )}
-              </div>
+              {wallets[0]?.provider && (
+                <button
+                  className="bn-demo-button"
+                  onClick={onboard.disconnectWallet}
+                >
+                  Disconnect Wallet
+                </button>
+              )}
             </div>
-            <div className="container notify">
-              <h2>Transaction Notifications with Notify</h2>
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  marginBottom: '1rem'
-                }}
-              >
-                <div style={{ marginBottom: '1rem' }}>
-                  <label>Send 0.001 Rinkeby Eth to:</label>
-                  <input
-                    type="text"
-                    style={{
-                      padding: '0.5rem',
-                      border: 'none',
-                      borderRadius: '10px',
-                      marginLeft: '0.5rem',
-                      width: '18rem'
-                    }}
-                    value={toAddress}
-                    placeholder="address"
-                    onChange={e => setToAddress(e.target.value)}
-                  />
+          </div>
+          <div className="container notify">
+            <h2>Transaction Notifications with Notify</h2>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                marginBottom: '1rem'
+              }}
+            >
+              {wallets[0] && (
+                <div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label>Send 0.001 Rinkeby Eth to:</label>
+                    <input
+                      type="text"
+                      style={{
+                        padding: '0.5rem',
+                        border: 'none',
+                        borderRadius: '10px',
+                        marginLeft: '0.5rem',
+                        width: '18rem'
+                      }}
+                      value={toAddress}
+                      placeholder="address"
+                      onChange={e => setToAddress(e.target.value)}
+                    />
+                  </div>
+                  <div className={'send-transaction-container'}>
+                    <button
+                      className="bn-demo-button"
+                      onClick={async () => {
+                        try {
+                          await onboard.setChain('0x4')
+                          sendHash()
+                        } catch (error) {
+                          // user rejected switch network request
+                        }
+                      }}
+                    >
+                      Send
+                    </button>
+                    with in-flight notifications
+                  </div>
+                  <div className={'send-transaction-container'}>
+                    <button
+                      className="bn-demo-button"
+                      onClick={async () => {
+                        try {
+                          await onboard.setChain('0x4')
+                          sendTransaction()
+                        } catch (error) {
+                          // user rejected switch network request
+                        }
+                      }}
+                    >
+                      Send
+                    </button>
+                    with pre-flight and in-flight notifications
+                  </div>
+                  <div className={'send-transaction-container'}>
+                    <button
+                      className="bn-demo-button"
+                      onClick={async () => {
+                        try {
+                          await onboard.setChain('0x4')
+                          sendInternalTransaction()
+                        } catch (error) {
+                          // user rejected switch network request
+                        }
+                      }}
+                    >
+                      Send
+                    </button>
+                    via a internal transaction
+                  </div>
                 </div>
-                <div className={'send-transaction-container'}>
-                  <button
-                    className="bn-demo-button"
-                    onClick={async () => {
-                      const ready = await readyToTransact()
-                      if (!ready) return
-                      sendHash()
-                    }}
-                  >
-                    Send
-                  </button>
-                  with in-flight notifications
-                </div>
-                <div className={'send-transaction-container'}>
-                  <button
-                    className="bn-demo-button"
-                    onClick={async () => {
-                      const ready = await readyToTransact()
-                      if (!ready) return
-                      sendTransaction()
-                    }}
-                  >
-                    Send
-                  </button>
-                  with pre-flight and in-flight notifications
-                </div>
-                <div className={'send-transaction-container'}>
-                  <button
-                    className="bn-demo-button"
-                    onClick={async () => {
-                      const ready = await readyToTransact()
-                      if (!ready) return
-                      sendInternalTransaction()
-                    }}
-                  >
-                    Send
-                  </button>
-                  via a internal transaction
-                </div>
-              </div>
+              )}
               <div>
                 <button
                   className="bn-demo-button"
                   onClick={async () => {
-                    if (!address) {
-                      await readyToTransact()
-                    }
-
-                    address && notify.account(address)
+                    wallets[0] && notify.account(wallets[0].accounts[0].address)
                   }}
                 >
                   Watch Current Account
@@ -475,11 +463,8 @@ const App = () => {
                 <button
                   className="bn-demo-button"
                   onClick={async () => {
-                    if (!address) {
-                      await readyToTransact()
-                    }
-
-                    address && notify.unsubscribe(address)
+                    wallets[0] &&
+                      notify.unsubscribe(wallets[0].accounts[0].address)
                   }}
                 >
                   Un-watch Current Account

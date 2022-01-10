@@ -1,10 +1,11 @@
 import React from 'react'
-import { version, dependencies } from '../../../package.json'
-
+import packageFile from '../../../package.json'
 import './Footer.css'
 
+const { version, dependencies } = packageFile
+
 const Footer = () => {
-  const staging = process.env.REACT_Footer_STAGING;
+  const staging = process.env.REACT_Footer_STAGING
 
   return (
     <section className="footer">
@@ -14,7 +15,7 @@ const Footer = () => {
         </span>
         <span>
           Onboard version:{' '}
-          <i>{staging ? 'NEXT' : dependencies['bnc-onboard'].slice(1)}</i>
+          <i>{staging ? 'NEXT' : dependencies['@bn-onboard/core'].slice(1)}</i>
         </span>
         <span>
           Notify version:{' '}
