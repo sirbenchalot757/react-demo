@@ -9,6 +9,8 @@ import walletLinkModule from '@bn-onboard/walletlink'
 import portisModule from '@bn-onboard/portis'
 import fortmaticModule from '@bn-onboard/fortmatic'
 import torusModule from '@bn-onboard/torus'
+import trezorModule from '@bn-onboard/trezor'
+import keepkeyModule from '@bn-onboard/keepkey'
 
 const networkId = 4
 const rpcUrl = 'https://rinkeby.infura.io/v3/cea9deb6467748b0b81b920b005c10c1'
@@ -30,6 +32,11 @@ const fortmatic = fortmaticModule({
 
 const torus = torusModule()
 const ledger = ledgerModule()
+const trezor = trezorModule({
+  appUrl: 'https://reactdemo.blocknative.com',
+  email: 'aaron@blocknative.com'
+})
+const keepkey = keepkeyModule()
 
 export function initOnboard() {
   return Onboard({
@@ -40,7 +47,9 @@ export function initOnboard() {
       fortmatic,
       portis,
       torus,
-      ledger
+      ledger,
+      trezor,
+      keepkey
     ],
     chains: [
       {
