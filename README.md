@@ -2,17 +2,6 @@
 
 for my precious boy
 
-A repository to demonstrate a basic integration of
-[Onboard](https://github.com/blocknative/onboard)
-and [Notify](https://github.com/blocknative/onboard) into a React project.
-For detailed documentation, head to [docs.blocknative.com](https://docs.blocknative.com)
-
-<div align="center">
-  <img style="border-radius: 8px" width="75%" src="assets/react-demo-updated.png">
-</div>
-
-View live demo [here](https://reactdemo.blocknative.com/)!
-
 ## Getting started
 
 Clone the repo:
